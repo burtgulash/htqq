@@ -23,18 +23,21 @@ from . import __version__
 
 
 def preprocess_query(queries):
-    for query in queries:
-        # Convert css queries to xpath
-        if not (query.startswith("//") or query.startswith("@")):
-            from cssselect import GenericTranslator, SelectorError
-            try:
-                # Try to interpret the selector as css
-                query = GenericTranslator().css_to_xpath(query)
-            except SelectorError:
-                # Else fallback to xpath
-                pass
+    for qs in queries:
+        qs = filter(None, (x.strip() for x in qs.split("|")))
 
-        yield query
+        # Convert css queries to xpath
+        for query in qs:
+            if not (query.startswith("//") or query.startswith("@")):
+                from cssselect import GenericTranslator, SelectorError
+                try:
+                    # Try to interpret the selector as css
+                    query = GenericTranslator().css_to_xpath(query)
+                except SelectorError:
+                    # Else fallback to xpath
+                    pass
+
+            yield query
 
 
 def extract(query, xs):
@@ -88,11 +91,8 @@ def postprocess(x, pretty=False):
     return x
 
 
-def do():
-    args = docopt.docopt(__doc__, version=__version__)
-    query = args.get("<query>") or ["/*"]  # Default query - print itself
-
-    ps = split_pipeline(query)
+def query(query_list):
+    ps = split_pipeline(query_list)
     ps = [(name, multi, list(preprocess_query(p))) for name, multi, p in ps]
 
     text = sys.stdin.read()
@@ -118,14 +118,14 @@ def do():
                 for subquery in pipeline:
                     subgen = extract(subquery, subgen)
 
-                y = list(subgen)
+                y = list(map(postprocess, subgen))
                 if not multi:
                     if len(y) == 0:
                         y = None
                     else:
                         y = y[0]
 
-                d[field] = postprocess(y)
+                d[field] = y
 
             json.dump(d, sys.stdout)
             sys.stdout.write("\n")
@@ -137,6 +137,10 @@ def do():
 
 def main():
     try:
-        sys.exit(do())
+        args = docopt.docopt(__doc__, version=__version__)
+        # Default query - just echo input (root node)
+        query_list = args.get("<query>") or ["/*"]
+
+        sys.exit(query(query_list))
     except KeyboardInterrupt:
         print("Interrupted", file=sys.stderr)
