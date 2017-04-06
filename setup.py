@@ -1,20 +1,20 @@
 from setuptools import setup
-from htmq import __version__
+from htqq import __version__
 
-setup(name="htmq",
+setup(name="htqq",
     version=__version__,
     description="HTMq html extractor",
     author="Burtgulash",
     author_email="burtgulas@gmail.com",
-    packages=["htmq"],
-    scripts=["scripts/htmq"],
+    packages=["htqq"],
+    scripts=["scripts/htqq"],
     install_requires=[
         "docopt",
         "lxml",
     ],
     entry_points={
         "console_scripts": [
-            "htmq=htmq.htmq:main",
+            "htqq=htqq.htqq:main",
         ]
     },
 )

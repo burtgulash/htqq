@@ -3,9 +3,9 @@
 """CLI html extractor
 
 Usage:
-    htmq --version
-    htmq (-h|--help)
-    htmq [options] [<query>...]
+    htqq --version
+    htqq (-h|--help)
+    htqq [options] [<query>...]
 
 Options:
     -l                    One html per line.
