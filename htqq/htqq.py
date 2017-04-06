@@ -30,7 +30,9 @@ def process(query, text):
         text = text.encode()
 
     try:
-        tree = lxml.html.fromstring(text)
+        parser = lxml.etree.HTMLParser(encoding="utf8",
+                                       recover=True, strip_cdata=True)
+        tree = lxml.etree.fromstring(text, parser=parser)
     except lxml.etree.ParserError as err:
         print(f"Err: {err}", file=sys.stderr)
         return
