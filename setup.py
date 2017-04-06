@@ -11,6 +11,7 @@ setup(name="htqq",
     install_requires=[
         "docopt",
         "lxml",
+        "cssselect",
     ],
     entry_points={
         "console_scripts": [
