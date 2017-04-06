@@ -62,16 +62,20 @@ def extract(query, xs):
 
 
 def split_pipeline(ql):
-    name, pipeline = None, []
+    name, multi, pipeline = None, True, []
 
     for q in ql:
         if q.endswith(":"):
-            yield name, pipeline
-            name, pipeline = q[:-1], []
+            yield name, multi, pipeline
+            name = q[:-1]
+            multi = name.endswith(":")
+            if multi:
+                name = q[:-1]
+            pipeline = []
         else:
             pipeline.append(q)
 
-    yield name, pipeline
+    yield name, multi, pipeline
 
 
 def postprocess(x, pretty=False):
@@ -89,7 +93,7 @@ def do():
     query = args.get("<query>") or ["/*"]  # Default query - print itself
 
     ps = split_pipeline(query)
-    ps = [(name, list(preprocess_query(p))) for name, p in ps]
+    ps = [(name, multi, list(preprocess_query(p))) for name, multi, p in ps]
 
     text = sys.stdin.read()
     try:
@@ -101,7 +105,7 @@ def do():
         print(f"Err: {err}", file=sys.stderr)
         return 3
 
-    initial_pipeline, ps = ps[0][1], ps[1:]
+    initial_pipeline, ps = ps[0][2], ps[1:]
     gen = [tree]
     for query in initial_pipeline:
         gen = extract(query, gen)
@@ -109,16 +113,17 @@ def do():
     for x in gen:
         try:
             d = postprocess(x, pretty=True) if not ps else {}
-            for field, pipeline in ps:
+            for field, multi, pipeline in ps:
                 subgen = [x]
                 for subquery in pipeline:
                     subgen = extract(subquery, subgen)
 
                 y = list(subgen)
-                if len(y) == 0:
-                    y = None
-                elif len(y) == 1:
-                    y = y[0]
+                if not multi:
+                    if len(y) == 0:
+                        y = None
+                    else:
+                        y = y[0]
 
                 d[field] = postprocess(y)
 
