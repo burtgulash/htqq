@@ -13,13 +13,13 @@ Options:
     --version             Show version.
 """
 
-__version__ = "1.0"
-
 import sys
 
 import docopt
 import lxml.html
 import lxml.etree
+
+from . import __version__
 
 
 def process(query, text):
@@ -69,7 +69,7 @@ def extract(query, xs):
             exit(4)
 
 
-def main():
+def process():
     args = docopt.docopt(__doc__, version=__version__)
     query = args.get("<query>") or ["*"]
     lines = args.get("-l")
@@ -78,6 +78,7 @@ def main():
         gen = iter(sys.stdin)
     else:
         gen = [sys.stdin.read()]
+        print(gen)
 
     for query in preprocess(query):
         gen = extract(query, gen)
@@ -91,8 +92,8 @@ def main():
             pass
 
 
-if __name__ == "__main__":
+def main():
     try:
-        main()
+        process()
     except KeyboardInterrupt:
         print("Interrupted", file=sys.stderr)

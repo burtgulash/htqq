@@ -7,7 +7,7 @@ setup(name="htqq",
     author="Burtgulash",
     author_email="burtgulas@gmail.com",
     packages=["htqq"],
-    scripts=["scripts/htqq"],
+    scripts=["bin/htqq"],
     install_requires=[
         "docopt",
         "lxml",
