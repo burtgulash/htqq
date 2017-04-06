@@ -13,9 +13,4 @@ setup(name="htqq",
         "lxml",
         "cssselect",
     ],
-    entry_points={
-        "console_scripts": [
-            "htqq=htqq.htqq:main",
-        ]
-    },
 )

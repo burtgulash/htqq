@@ -5,14 +5,16 @@
 Usage:
     htqq --version
     htqq (-h|--help)
-    htqq [options] [<query>...]
+    htqq [-lj] [<query>...]
 
 Options:
     -l                    One html per line.
+    -j                    Output as json snippets.
     -h --help             Show this screen.
     --version             Show version.
 """
 
+import json
 import sys
 
 import docopt
@@ -75,6 +77,7 @@ def do():
     args = docopt.docopt(__doc__, version=__version__)
     query = args.get("<query>") or ["/*"]  # Default query - print itself
     lines = args.get("-l")
+    as_json = args.get("-j")
 
     if lines:
         gen = iter(sys.stdin)
@@ -86,7 +89,10 @@ def do():
 
     for x in gen:
         try:
-            sys.stdout.write(x)
+            if as_json:
+                json.dump(x, sys.stdout)
+            else:
+                sys.stdout.write(x)
             sys.stdout.write("\n")
             sys.stdout.flush()
         except:
