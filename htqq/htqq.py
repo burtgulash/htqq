@@ -97,7 +97,7 @@ def do():
             encoding="utf-8", remove_blank_text=True
         )
         tree = lxml.html.fromstring(text, parser=parser)
-    except lxml.etree.ParserError as err:
+    except (lxml.etree.ParserError, lxml.etree.XMLSyntaxError) as err:
         print(f"Err: {err}", file=sys.stderr)
         return 3
 
