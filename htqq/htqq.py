@@ -40,15 +40,25 @@ def preprocess_query(queries):
 def extract(query, xs):
     for x in xs:
         try:
-            y = x.xpath(query)
+            x = x.xpath(query)
         except lxml.etree.XPathEvalError as err:
             print(f"xpath '{query}': {err}", file=sys.stderr)
             continue
+        except AttributeError:
+            continue
 
-        if isinstance(y, str):
-            yield y
+        if isinstance(x, str):
+            x = x.strip()
+            if x:
+                yield x
         else:
-            yield from y
+            for y in x:
+                if isinstance(y, str):
+                    y = y.strip()
+                    if y:
+                        yield y
+                else:
+                    yield y
 
 
 def split_pipeline(ql):
@@ -64,11 +74,13 @@ def split_pipeline(ql):
     yield name, pipeline
 
 
-def postprocess(x):
+def postprocess(x, pretty=False):
     if isinstance(x, str):
         x = x.strip()
     elif isinstance(x, lxml.etree._Element):
-        x = lxml.etree.tostring(x, encoding="utf-8", with_tail=False).decode()
+        x = lxml.etree.tostring(
+            x, encoding="utf-8", with_tail=False, pretty_print=pretty
+        ).decode()
     return x
 
 
@@ -96,7 +108,7 @@ def do():
 
     for x in gen:
         try:
-            d = postprocess(x) if not ps else {}
+            d = postprocess(x, pretty=True) if not ps else {}
             for field, pipeline in ps:
                 subgen = [x]
                 for subquery in pipeline:
