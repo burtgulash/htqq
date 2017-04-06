@@ -11,32 +11,45 @@ pipeline step.
 Eg. **htqq a @href** creates a pipeline with two steps. The first one (a)
 extracts all links and the second extracts href attribute from them.
 
-Example usage
+It performs almost none transformations of your queries. You can use any
+function supported by lxml's xpath. For example **text()** to extract node's
+text or **string()** to extract text from current node and its descendants.
+
+
+## Example usage
+
+1. Extract all paragraphs (p)
 ```
-# 1. Extract all paragraphs (p)
 $ echo '<html><body><p>Hello</p><p>World</p></body></html>' | htqq p
 <p>Hello</p>
 <p>World</p>
+```
 
-# 2. Extract text from them
+2. Extract text from them
+```
 $ echo '<html><body><p>Hello</p><p>World</p></body></html>' | htqq p 'text()'
 Hello
 World
+```
 
-# 3. Extract all links (a) and then all href attributes (@href)
-$ echo '
-<a href="http://example1.com"></a>
+3. Extract all links (a) and then all href attributes (@href)
+```
+$ echo '<a href="http://example1.com"></a>
 <a href="http://example2.com"></a>
 <a href="http://example3.com"></a>' | htqq a @href
 http://example1.com
 http://example2.com
 http://example3.com
+```
 
-# 4. Read each div on its line and extract using css class selector
+4. Read each div on its line and extract using css class selector
+```
 $ echo "<div class='A'>AAA</div>\n<div>BBB</div>" | htqq -l .A 'text()'
 AAA
+```
 
-# 5. Use css negation
+5. Use css negation
+```
 $ echo "<div class='A'>AAA</div>\n<div>BBB</div>" | htqq -l ':not(.A)' 'text()'
 BBB
 ```
