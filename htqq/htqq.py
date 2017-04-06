@@ -71,14 +71,13 @@ def extract(query, xs):
 
 def do():
     args = docopt.docopt(__doc__, version=__version__)
-    query = args.get("<query>") or ["*"]
+    query = args.get("<query>") or ["/*"]  # Default query - print itself
     lines = args.get("-l")
 
     if lines:
         gen = iter(sys.stdin)
     else:
         gen = [sys.stdin.read()]
-        print(gen)
 
     for query in preprocess(query):
         gen = extract(query, gen)
