@@ -69,7 +69,7 @@ def extract(query, xs):
             exit(4)
 
 
-def process():
+def do():
     args = docopt.docopt(__doc__, version=__version__)
     query = args.get("<query>") or ["*"]
     lines = args.get("-l")
@@ -94,6 +94,6 @@ def process():
 
 def main():
     try:
-        process()
+        do()
     except KeyboardInterrupt:
         print("Interrupted", file=sys.stderr)
