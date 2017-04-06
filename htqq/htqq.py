@@ -51,10 +51,11 @@ def preprocess(queries):
         if not (query.startswith("//") or query.startswith("@")):
             from cssselect import GenericTranslator, SelectorError
             try:
+                # Try to interpret the selector as css
                 query = GenericTranslator().css_to_xpath(query)
             except SelectorError:
-                print("Invalid css selector", file=sys.stderr)
-                exit(3)
+                # Else fallback to xpath
+                pass
 
         yield query
 
