@@ -26,13 +26,11 @@ def process(query, text):
     if not text:
         return
 
-    if isinstance(text, str):
-        text = text.encode()
-
     try:
-        parser = lxml.etree.HTMLParser(encoding="utf8",
-                                       recover=True, strip_cdata=True)
-        tree = lxml.etree.fromstring(text, parser=parser)
+        parser = lxml.etree.HTMLParser(
+            encoding="utf-8", remove_blank_text=True
+        )
+        tree = lxml.html.fromstring(text, parser=parser)
     except lxml.etree.ParserError as err:
         print(f"Err: {err}", file=sys.stderr)
         return
@@ -41,7 +39,9 @@ def process(query, text):
         if isinstance(x, str):
             x = x.strip()
         else:
-            x = lxml.etree.tostring(x, with_tail=False).decode()
+            x = lxml.etree.tostring(
+                x, encoding="utf-8", with_tail=False,
+            ).decode()
 
         if x:
             yield x
