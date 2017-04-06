@@ -5,11 +5,9 @@
 Usage:
     htqq --version
     htqq (-h|--help)
-    htqq [-lj] [<query>...]
+    htqq [<query>...]
 
 Options:
-    -l                    One html per line.
-    -j                    Output as json snippets.
     -h --help             Show this screen.
     --version             Show version.
 """
@@ -24,37 +22,7 @@ import lxml.etree
 from . import __version__
 
 
-def process(query, text):
-    if not text:
-        return
-
-    try:
-        parser = lxml.etree.HTMLParser(
-            encoding="utf-8", remove_blank_text=True
-        )
-        tree = lxml.html.fromstring(text, parser=parser)
-    except lxml.etree.ParserError as err:
-        print(f"Err: {err}", file=sys.stderr)
-        return
-
-    y = tree.xpath(query)
-    if isinstance(y, str):
-        yield y
-        return
-
-    for x in y:
-        if isinstance(x, str):
-            x = x.strip()
-        else:
-            x = lxml.etree.tostring(
-                x, encoding="utf-8", with_tail=False,
-            ).decode()
-
-        if x:
-            yield x
-
-
-def preprocess(queries):
+def preprocess_query(queries):
     for query in queries:
         # Convert css queries to xpath
         if not (query.startswith("//") or query.startswith("@")):
@@ -72,10 +40,16 @@ def preprocess(queries):
 def extract(query, xs):
     for x in xs:
         try:
-            yield from process(query, x)
+            y = x.xpath(query)
         except lxml.etree.XPathEvalError as err:
             print(f"xpath '{query}': {err}", file=sys.stderr)
-            exit(4)
+            continue
+
+        if isinstance(y, str):
+            yield y
+        else:
+            yield from y
+
 
 def split_pipeline(ql):
     name, pipeline = None, []
@@ -90,27 +64,39 @@ def split_pipeline(ql):
     yield name, pipeline
 
 
+def postprocess(x):
+    if isinstance(x, str):
+        x = x.strip()
+    elif isinstance(x, lxml.etree._Element):
+        x = lxml.etree.tostring(x, encoding="utf-8", with_tail=False).decode()
+    return x
+
+
 def do():
     args = docopt.docopt(__doc__, version=__version__)
     query = args.get("<query>") or ["/*"]  # Default query - print itself
-    lines = args.get("-l")
-    as_json = args.get("-j")
-
-    if lines:
-        gen = iter(sys.stdin)
-    else:
-        gen = [sys.stdin.read()]
 
     ps = split_pipeline(query)
-    ps = [(name, list(preprocess(p))) for name, p in ps]
+    ps = [(name, list(preprocess_query(p))) for name, p in ps]
+
+    text = sys.stdin.read()
+    try:
+        parser = lxml.etree.HTMLParser(
+            encoding="utf-8", remove_blank_text=True
+        )
+        tree = lxml.html.fromstring(text, parser=parser)
+    except lxml.etree.ParserError as err:
+        print(f"Err: {err}", file=sys.stderr)
+        return 3
 
     initial_pipeline, ps = ps[0][1], ps[1:]
+    gen = [tree]
     for query in initial_pipeline:
         gen = extract(query, gen)
 
     for x in gen:
         try:
-            d = x if not ps else {}
+            d = postprocess(x) if not ps else {}
             for field, pipeline in ps:
                 subgen = [x]
                 for subquery in pipeline:
@@ -122,17 +108,18 @@ def do():
                 elif len(y) == 1:
                     y = y[0]
 
-                d[field] = y
+                d[field] = postprocess(y)
 
             json.dump(d, sys.stdout)
             sys.stdout.write("\n")
             sys.stdout.flush()
-        except:
-            pass
+        except Exception as err:
+            print("ERR:", err, file=sys.stderr)
+            raise
 
 
 def main():
     try:
-        do()
+        sys.exit(do())
     except KeyboardInterrupt:
         print("Interrupted", file=sys.stderr)
