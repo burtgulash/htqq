@@ -5,11 +5,12 @@
 Usage:
     htqq --version
     htqq (-h|--help)
-    htqq [<query>...]
+    htqq [options] [<query>...]
 
 Options:
-    -h --help             Show this screen.
-    --version             Show version.
+    -j <jsoncol>       Interpret stdin as jsonl where <jsoncol> = htmldata
+    -h --help          Show this screen.
+    --version          Show version.
 """
 
 import json
@@ -91,11 +92,7 @@ def postprocess(x, pretty=False):
     return x
 
 
-def query(query_list):
-    ps = split_pipeline(query_list)
-    ps = [(name, multi, list(preprocess_query(p))) for name, multi, p in ps]
-
-    text = sys.stdin.read()
+def do_query(ps, text, include_data=None):
     try:
         parser = lxml.etree.HTMLParser(
             encoding="utf-8", remove_blank_text=True
@@ -127,12 +124,15 @@ def query(query_list):
 
                 d[field] = y
 
+            # Include rest of data under "_"
+            if ps and include_data is not None:
+                d["_"] = include_data
+
             json.dump(d, sys.stdout)
             sys.stdout.write("\n")
             sys.stdout.flush()
         except Exception as err:
             print("ERR:", err, file=sys.stderr)
-            raise
 
 
 def main():
@@ -141,6 +141,39 @@ def main():
         # Default query - just echo input (root node)
         query_list = args.get("<query>") or ["/*"]
 
-        sys.exit(query(query_list))
+        # Preprocess query pipeline
+        ps = split_pipeline(query_list)
+        ps = [(name, multi, list(preprocess_query(p)))
+              for name, multi, p in ps]
+
+        # Handle eachline = jsonl object case
+        if "-j" in args:
+            jsonl_column = args["-j"]
+            for line in sys.stdin:
+                try:
+                    inp_ = json.loads(line)
+                except json.JSONDecodeError as err:
+                    print("Json decode:", err, file=sys.stderr)
+                    sys.exit(6)
+                if not isinstance(inp_, dict):
+                    print("Input is not jsonl dicts", file=sys.stderr)
+                    sys.exit(5)
+
+                html = inp_.get(jsonl_column)
+                if html:
+                    del inp_[jsonl_column]
+                    do_query(ps, html, include_data=inp_)
+
+        # Else treat stdin as one big html blob
+        else:
+            html = sys.stdin.read()
+            do_query(ps, html)
+
     except KeyboardInterrupt:
         print("Interrupted", file=sys.stderr)
+        sys.exit(3)
+    except Exception as err:
+        print("Err:", err, file=sys.stderr)
+        sys.exit(4)
+    finally:
+        sys.stderr.close()
