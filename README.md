@@ -55,6 +55,7 @@ BBB
 ```
 
 6. Extract json objects
+
 Fields ending with single colon (:) form a json field.
 ```
 echo '<div class="linkz">
@@ -68,6 +69,7 @@ echo '<div class="linkz">
 ```
 
 7. Extract json objects as list
+
 Fields ending with double colon (::) form a json field and extract multiple items.
 ```
 echo '<div class="linkz">
