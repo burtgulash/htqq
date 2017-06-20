@@ -18,21 +18,21 @@ text or **string()** to extract text from current node and its descendants.
 
 ## Example usage
 
-1. Extract all paragraphs (p)
+### 1. Extract all paragraphs (p)
 ```
 $ echo '<html><body><p>Hello</p><p>World</p></body></html>' | htqq p
 <p>Hello</p>
 <p>World</p>
 ```
 
-2. Extract text from them
+### 2. Extract text from them
 ```
 $ echo '<html><body><p>Hello</p><p>World</p></body></html>' | htqq p 'text()'
 Hello
 World
 ```
 
-3. Extract all links (a) and then all href attributes (@href)
+### 3. Extract all links (a) and then all href attributes (@href)
 ```
 $ echo '<a href="http://example1.com"></a>
 <a href="http://example2.com"></a>
@@ -42,19 +42,19 @@ http://example2.com
 http://example3.com
 ```
 
-4. Read each div on its line and extract using css class selector
+### 4. Read each div on its line and extract using css class selector
 ```
 $ echo "<div class='A'>AAA</div>\n<div>BBB</div>" | htqq -l .A 'text()'
 AAA
 ```
 
-5. Use css negation
+### 5. Use css negation
 ```
 $ echo "<div class='A'>AAA</div>\n<div>BBB</div>" | htqq -l ':not(.A)' 'text()'
 BBB
 ```
 
-6. Extract json objects
+### 6. Extract json objects
 
 Fields ending with single colon (:) form a json field.
 ```
@@ -68,7 +68,7 @@ echo '<div class="linkz">
 {"href": "http://C.com", "text": "C"}
 ```
 
-7. Extract json objects as list
+### 7. Extract json objects as list
 
 Fields ending with double colon (::) form a json field and extract multiple items.
 ```
