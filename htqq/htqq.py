@@ -9,6 +9,7 @@ Usage:
 
 Options:
     -j <jsoncol>       Interpret stdin as jsonl where <jsoncol> = htmldata
+    -l                 Interpret stdin as one html snippet per line
     -h --help          Show this screen.
     --version          Show version.
 """
@@ -147,8 +148,9 @@ def main():
               for name, multi, p in ps]
 
         # Handle eachline = jsonl object case
-        if "-j" in args:
+        if args.get("-j") is not None:
             jsonl_column = args["-j"]
+
             for line in sys.stdin:
                 try:
                     inp_ = json.loads(line)
@@ -163,6 +165,11 @@ def main():
                 if html:
                     del inp_[jsonl_column]
                     do_query(ps, html, include_data=inp_)
+
+        # Treat stdin as html snippets
+        elif args.get("-l"):
+            for line in sys.stdin:
+                do_query(ps, line)
 
         # Else treat stdin as one big html blob
         else:

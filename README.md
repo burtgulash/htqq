@@ -53,3 +53,27 @@ AAA
 $ echo "<div class='A'>AAA</div>\n<div>BBB</div>" | htqq -l ':not(.A)' 'text()'
 BBB
 ```
+
+6. Extract json objects
+Fields ending with single colon (:) form a json field.
+```
+echo '<div class="linkz">
+    <a href="http://A.com">A</a>
+    <a href="http://B.com">B</a>
+    <a href="http://C.com">C</a>
+</div>' | htqq .linkz a href: @href text: 'text()'
+{"href": "http://A.com", "text": "A"}
+{"href": "http://B.com", "text": "B"}
+{"href": "http://C.com", "text": "C"}
+```
+
+7. Extract json objects as list
+Fields ending with double colon (::) form a json field and extract multiple items.
+```
+echo '<div class="linkz">
+    <a href="http://A.com">A</a>
+    <a href="http://B.com">B</a>
+    <a href="http://C.com">C</a>
+</div>' | htqq .linkz links:: 'a | @href'
+{"links:": ["http://A.com", "http://B.com", "http://C.com"]}
+```
